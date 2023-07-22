@@ -215,8 +215,14 @@ const abi = [
   },
 ];
 export const contract_address = "0x9a03bacc4A7C6936CAAA3DF6ecbC8102Bf5c7Bc7";
+export const contract_address_polygon =
+  "0xe06c3991cb781a23deb16a02ac689d1e497c8739";
 
-export const getContract = async (signer = null) => {
+export const getContract = async (network = "Mantle Testnet") => {
   provider = new JsonRpcProvider("https://rpc.testnet.mantle.xyz/");
-  return new ethers.Contract(contract_address, abi, signer || provider);
+  return new ethers.Contract(
+    network === "Mantle Testnet" ? contract_address : contract_address_polygon,
+    abi,
+    provider
+  );
 };

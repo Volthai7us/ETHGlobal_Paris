@@ -4,21 +4,16 @@ import "./output.css";
 import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
-import {
-  polygonMumbai,
-  mantleTestnet,
-  lineaTestnet,
-  zkSyncTestnet,
-} from "wagmi/chains";
+import { polygon, mantleTestnet } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 const { chains, publicClient } = configureChains(
-  [mantleTestnet, polygonMumbai, lineaTestnet, zkSyncTestnet],
+  [mantleTestnet, polygon],
   [publicProvider()]
 );
 
 const { connectors } = getDefaultWallets({
-  appName: "My RainbowKit App",
-  projectId: "YOUR_PROJECT_ID",
+  appName: "Trusty Order",
+  projectId: "trust-order-1",
   chains,
 });
 

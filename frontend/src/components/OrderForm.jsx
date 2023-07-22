@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { ethers, JsonRpcProvider } from "ethers";
-import { getContract } from "../api";
-import { contract_address } from "../api";
-import { useContractWrite, usePrepareContractWrite } from "wagmi";
+import { contract_address, contract_address_polygon } from "../api";
+import { useContractWrite, usePrepareContractWrite, useNetwork } from "wagmi";
 
 function OrderForm({
   tokens,
@@ -13,9 +11,21 @@ function OrderForm({
 }) {
   const [amount, setAmount] = useState(0);
   const [price, setPrice] = useState(0);
+  const { chain } = useNetwork();
+  const sellTokenAddress = tokens.find(
+    (token) => token.name == selectedSellToken
+  )?.address;
+  const buyTokenAddress = tokens.find(
+    (token) => token.name == selectedBuyToken
+  )?.address;
+
+  const decided_contract_address =
+    chain.name === "Mantle Testnet"
+      ? contract_address
+      : contract_address_polygon;
 
   const { config: approveConfig } = usePrepareContractWrite({
-    address: tokens.find((token) => token.name == selectedSellToken).address,
+    address: sellTokenAddress,
     abi: [
       {
         anonymous: false,
@@ -202,13 +212,13 @@ function OrderForm({
       },
     ],
     functionName: "approve",
-    args: [contract_address, 10000],
+    args: [decided_contract_address, 10000],
   });
 
   const { write: writeApprove } = useContractWrite(approveConfig);
 
   const { config: buyConfig } = usePrepareContractWrite({
-    address: contract_address,
+    address: decided_contract_address,
     abi: [
       {
         inputs: [],
@@ -422,16 +432,11 @@ function OrderForm({
       },
     ],
     functionName: "placeOrder",
-    args: [
-      tokens.find((token) => token.name == selectedSellToken).address,
-      amount,
-      tokens.find((token) => token.name == selectedBuyToken).address,
-      price,
-    ],
+    args: [sellTokenAddress, amount, buyTokenAddress, price],
   });
 
   const { config: sellConfig } = usePrepareContractWrite({
-    address: contract_address,
+    address: decided_contract_address,
     abi: [
       {
         inputs: [],
@@ -645,12 +650,7 @@ function OrderForm({
       },
     ],
     functionName: "placeOrder",
-    args: [
-      tokens.find((token) => token.name == selectedSellToken).address,
-      amount,
-      tokens.find((token) => token.name == selectedBuyToken).address,
-      price,
-    ],
+    args: [sellTokenAddress, amount, buyTokenAddress, price],
   });
 
   const { write: writeBuy } = useContractWrite(buyConfig);
