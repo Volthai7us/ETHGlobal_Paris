@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.6;
 
+import "./IERC20.sol";
+
 contract OrderBook {
     struct Order {
         uint id;
         address trader;
-        bool isBuyOrder;
-        uint price;
-        uint amount;
+        IERC20 tokenToSell;
+        uint amountToSell;
+        IERC20 tokenToBuy;
+        uint amountToBuy;
     }
 
     address public owner;
@@ -19,58 +22,47 @@ contract OrderBook {
         owner = msg.sender;
     }
 
-    function placeOrder(bool _isBuyOrder, uint _price, uint _amount) public {
-        orders[nextOrderId] = Order(nextOrderId, msg.sender, _isBuyOrder, _price, _amount);
+    function placeOrder(IERC20 _tokenToSell, uint _amountToSell, IERC20 _tokenToBuy, uint _amountToBuy) public {
+        orders[nextOrderId] = Order(nextOrderId, msg.sender, _tokenToSell, _amountToSell, _tokenToBuy, _amountToBuy);
         orderIds.push(nextOrderId);
+        nextOrderId++;
+    }
 
-        for(uint i = 0; i < orderIds.length; i++){
-            // Buy order should match with a sell order with price less or equal
-            // Sell order should match with a buy order with price greater or equal
-            if(
-                (orders[i].isBuyOrder != _isBuyOrder) &&
-                (_isBuyOrder && orders[i].price <= _price || !_isBuyOrder && orders[i].price >= _price)
-            ){
-                // Match found, execute trade
-                // For simplicity, we assume all orders are for 1 token only
-                if(_isBuyOrder){
-                    // Ensure the buyer has enough Ether
-                    require(msg.sender.balance >= _price, "Not enough balance");
-                    // Transfer Ether from buyer to seller
-                    payable(orders[i].trader).transfer(_price);
-                } else {
-                    // For a complete implementation, we should also transfer tokens from seller to buyer
-                }
+    function matchOrders(uint _orderId1, uint _orderId2) public {
+        Order storage order1 = orders[_orderId1];
+        Order storage order2 = orders[_orderId2];
 
-                // Update or delete the matched order
-                if(orders[i].amount > 1){
-                    orders[i].amount--;
-                } else {
-                    delete orders[i];
-                }
+        // Ensure that the two orders are complementary
+        require(order1.tokenToSell == order2.tokenToBuy, "Tokens do not match");
+        require(order1.tokenToBuy == order2.tokenToSell, "Tokens do not match");
+        require(order1.amountToSell == order2.amountToBuy, "Amounts do not match");
+        require(order1.amountToBuy == order2.amountToSell, "Amounts do not match");
 
-                // Update or delete the placed order
-                if(_amount > 1){
-                    orders[nextOrderId].amount--;
-                } else {
-                    delete orders[nextOrderId];
-                }
+        // Transfer the tokens between the traders
+        require(order1.tokenToSell.transferFrom(order1.trader, order2.trader, order1.amountToSell), "Transfer failed");
+        require(order2.tokenToSell.transferFrom(order2.trader, order1.trader, order2.amountToSell), "Transfer failed");
 
-                break;
+        // Delete the orders
+        delete orders[_orderId1];
+        delete orders[_orderId2];
+
+        // Remove the orders from the orderIds array
+        for (uint i = 0; i < orderIds.length; i++){
+            if (orderIds[i] == _orderId1 || orderIds[i] == _orderId2){
+                orderIds[i] = orderIds[orderIds.length - 1];
+                orderIds.pop();
             }
-        }
-
-        if(orders[nextOrderId].amount > 0){
-            nextOrderId++;
         }
     }
 
-    function getOrder(uint _orderId) public view returns(uint, address, bool, uint, uint) {
+    function getOrder(uint _orderId) public view returns(uint, address, IERC20, uint, IERC20, uint) {
         return (
             orders[_orderId].id,
             orders[_orderId].trader,
-            orders[_orderId].isBuyOrder,
-            orders[_orderId].price,
-            orders[_orderId].amount
+            orders[_orderId].tokenToSell,
+            orders[_orderId].amountToSell,
+            orders[_orderId].tokenToBuy,
+            orders[_orderId].amountToBuy
         );
     }
 
@@ -79,18 +71,15 @@ contract OrderBook {
     }
 
     function cancelOrder(uint _orderId) public {
-        require(msg.sender == orders[_orderId].trader, "Not the trader");
+        require(orders[_orderId].trader == msg.sender, "Not the trader");
         delete orders[_orderId];
+
+        // Remove the order from the orderIds array
         for (uint i = 0; i < orderIds.length; i++){
             if (orderIds[i] == _orderId){
                 orderIds[i] = orderIds[orderIds.length - 1];
                 orderIds.pop();
-                break;
             }
         }
-    }
-
-    function lastOrderId() public view returns(uint) {
-        return nextOrderId;
     }
 }

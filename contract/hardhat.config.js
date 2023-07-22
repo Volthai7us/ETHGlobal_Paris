@@ -9,5 +9,17 @@ module.exports = {
       url: "https://rpc.testnet.mantle.xyz/",
       accounts: [process.env.PRIVATE_KEY], // Uses the private key from the .env file
     },
+    polygon: {
+      url: "https://polygon.llamarpc.com",
+      accounts: [process.env.PRIVATE_KEY], // Uses the private key from the .env file
+    },
+    "zk-testnet": {
+      url: "https://testnet.era.zksync.dev",
+      accounts: [process.env.PRIVATE_KEY], // Uses the private key from the .env file
+    },
+    "linea-testnet": {
+      url: "https://rpc.goerli.linea.build",
+      accounts: [process.env.PRIVATE_KEY], // Uses the private key from the .env file
+    },
   },
 };
