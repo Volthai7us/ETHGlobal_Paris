@@ -1,16 +1,20 @@
 import { getContract } from "../api/index";
 import { useEffect, useState } from "react";
 
-function OrdersTable() {
+function OrdersTable({ tokens, selectedBuyToken, selectedSellToken }) {
   const [orders, setOrders] = useState([]);
 
   function parseOrder(order) {
     return {
       id: order[0].toString(),
       trader: order[1],
-      isBuyOrder: order[2],
-      price: order[3].toString(),
-      amount: order[4].toString(),
+      tokenToSell: order[2],
+      amountToSell: order[3].toString(),
+      tokenToBuy: order[4],
+      amountToBuy: order[5].toString(),
+      isBuyOrder:
+        order[4] ===
+        tokens.find((token) => token.name === selectedBuyToken).address,
     };
   }
 
@@ -21,9 +25,9 @@ function OrdersTable() {
   useEffect(() => {
     setOrders([]);
     getContract().then((contract) => {
-      contract.lastOrderId().then((lastOrderId) => {
-        for (let i = 0; i < lastOrderId; i++) {
-          contract.orders(i).then((order) => {
+      contract.getAllOrders().then((orderIds) => {
+        for (let i = 0; i < orderIds.length; i++) {
+          contract.orders(orderIds[i]).then((order) => {
             if (order) {
               setOrders((prevOrders) => [
                 ...prevOrders,
@@ -34,7 +38,7 @@ function OrdersTable() {
         }
       });
     });
-  }, []);
+  }, [selectedBuyToken, selectedSellToken]);
 
   return (
     <div className="flex flex-col bg-darkGreen2 rounded-md shadow-lg p-6 h-fit">
@@ -67,10 +71,10 @@ function OrdersTable() {
                 {order.isBuyOrder ? "Buy" : "Sell"}
               </td>
               <td className="border border-lightGreen px-4 py-2">
-                {order.price}
+                {order.amountToBuy / order.amountToSell}
               </td>
               <td className="border border-lightGreen px-4 py-2">
-                {order.amount}
+                {order.amountToSell}
               </td>
             </tr>
           ))}

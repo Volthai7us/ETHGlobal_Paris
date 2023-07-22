@@ -55,14 +55,19 @@ const abi = [
         type: "address",
       },
       {
-        internalType: "bool",
+        internalType: "contract IERC20",
         name: "",
-        type: "bool",
+        type: "address",
       },
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+      {
+        internalType: "contract IERC20",
+        name: "",
+        type: "address",
       },
       {
         internalType: "uint256",
@@ -74,16 +79,21 @@ const abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "lastOrderId",
-    outputs: [
+    inputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "_orderId1",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_orderId2",
         type: "uint256",
       },
     ],
-    stateMutability: "view",
+    name: "matchOrders",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -139,18 +149,23 @@ const abi = [
         type: "address",
       },
       {
-        internalType: "bool",
-        name: "isBuyOrder",
-        type: "bool",
+        internalType: "contract IERC20",
+        name: "tokenToSell",
+        type: "address",
       },
       {
         internalType: "uint256",
-        name: "price",
+        name: "amountToSell",
         type: "uint256",
       },
       {
+        internalType: "contract IERC20",
+        name: "tokenToBuy",
+        type: "address",
+      },
+      {
         internalType: "uint256",
-        name: "amount",
+        name: "amountToBuy",
         type: "uint256",
       },
     ],
@@ -173,18 +188,23 @@ const abi = [
   {
     inputs: [
       {
-        internalType: "bool",
-        name: "_isBuyOrder",
-        type: "bool",
+        internalType: "contract IERC20",
+        name: "_tokenToSell",
+        type: "address",
       },
       {
         internalType: "uint256",
-        name: "_price",
+        name: "_amountToSell",
         type: "uint256",
       },
       {
+        internalType: "contract IERC20",
+        name: "_tokenToBuy",
+        type: "address",
+      },
+      {
         internalType: "uint256",
-        name: "_amount",
+        name: "_amountToBuy",
         type: "uint256",
       },
     ],
@@ -194,9 +214,9 @@ const abi = [
     type: "function",
   },
 ];
-const address = "0x032ac723fbb89A23f3029EC254ea333Eb57718f1";
+export const contract_address = "0x9a03bacc4A7C6936CAAA3DF6ecbC8102Bf5c7Bc7";
 
-export const getContract = async () => {
+export const getContract = async (signer = null) => {
   provider = new JsonRpcProvider("https://rpc.testnet.mantle.xyz/");
-  return new ethers.Contract(address, abi, provider);
+  return new ethers.Contract(contract_address, abi, signer || provider);
 };
